@@ -1,0 +1,56 @@
+services:
+  streamlit:
+    image: streamlit
+    container_name: bg_remover
+    build:
+      dockerfile: ./streamlit.Dockerfile
+    restart: "no"
+    ports:
+      - 8501:8501
+    entrypoint:
+      - streamlit
+      - run
+      - bg_remove.py
+      - --server.port=8501
+      - --server.address=0.0.0.0
+      - --server.enableCORS=false
+      - --server.enableXsrfProtection=false
+    #network_mode: "host"
+    networks:
+      nginx_subnet:
+        ipv4_address: 10.5.0.5
+
+  nginx:
+    image : nginx:1.18
+    container_name: nginx
+    restart: "unless-stopped"
+    network_mode: "host"
+    secrets:
+      - source: ssl_fullchain
+        target: /etc/letsencrypt/live/ericamartina.live/fullchain.pem
+        mode: 0600
+      - source: ssl_privkey
+        target: /etc/letsencrypt/live/ericamartina.live/privkey.pem
+        mode: 0644
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ericamartina.live.conf:/etc/nginx/conf.d/ericamartina.live.conf
+      #- ./nginx/fullchain.pem:/etc/letsencrypt/live/ericamartina.live/fullchain.pem
+      #- ./nginx/privkey.pem:/etc/letsencrypt/live/ericamartina.live/privkey.pem
+      - ./data/:/root/.u2net/
+
+networks:
+  nginx_subnet:
+    driver: bridge
+    name: nginx_subnet
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
+
+
+secrets:
+  ssl_fullchain:
+    file: ./nginx/fullchain.pem
+  ssl_privkey:
+    file: ./nginx/privkey.pem
