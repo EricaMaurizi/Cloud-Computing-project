@@ -1,6 +1,7 @@
 FROM python:3.8-slim as streamlit
 
 COPY ./BackgroundRemoval-main/ /app/BackgroundRemoval
+COPY ./data/u2net.onnx /root/.u2net/u2net.onnx
 
 WORKDIR /app/BackgroundRemoval
 

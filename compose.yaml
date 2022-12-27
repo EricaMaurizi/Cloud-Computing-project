@@ -1,12 +1,11 @@
 services:
   streamlit:
     image: streamlit
-    container_name: bg_remover
     build:
       dockerfile: ./streamlit.Dockerfile
     restart: "no"
     ports:
-      - 8501:8501
+      - "8501-8503:8501"
     entrypoint:
       - streamlit
       - run
@@ -15,10 +14,14 @@ services:
       - --server.address=0.0.0.0
       - --server.enableCORS=false
       - --server.enableXsrfProtection=false
-    #network_mode: "host"
+    deploy:
+      mode: replicated
+      replicas: 3
+    #volumes:
+    #  - ./data/:/root/.u2net/
     networks:
       nginx_subnet:
-        ipv4_address: 10.5.0.5
+      #  ipv4_address: 10.5.0.5
 
   nginx:
     image : nginx:1.18
@@ -35,9 +38,6 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/ericamartina.live.conf:/etc/nginx/conf.d/ericamartina.live.conf
-      #- ./nginx/fullchain.pem:/etc/letsencrypt/live/ericamartina.live/fullchain.pem
-      #- ./nginx/privkey.pem:/etc/letsencrypt/live/ericamartina.live/privkey.pem
-      - ./data/:/root/.u2net/
 
 networks:
   nginx_subnet:
